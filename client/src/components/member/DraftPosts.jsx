@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api'
-import { useSocket } from '../../../context/SocketContext';
+import { useSocket } from '../../../context/socketContext';
 import toast from 'react-hot-toast';
 import { FaEdit, FaTrash, FaPaperPlane } from 'react-icons/fa';
 import moment from 'moment';
