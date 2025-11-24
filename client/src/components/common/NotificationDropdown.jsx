@@ -4,7 +4,7 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { FaCheck, FaTimes, FaBell, FaCheckDouble } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { useSocket } from '../../../context/SocketContext';
+import { useSocket } from '../../../context/socketContext';
 
 const NotificationDropdown = ({ onClose = () => {}, onUpdateCount = () => {} }) => {
   const [notifications, setNotifications] = useState([]);
