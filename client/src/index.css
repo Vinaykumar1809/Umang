@@ -1,3 +1,6 @@
+@import "slick-carousel/slick/slick.css";
+@import "slick-carousel/slick/slick-theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -69,3 +72,4 @@ body {
   background-color: rgb(30, 41, 59);
   border: 1px solid rgb(61, 69, 83);
 }
+

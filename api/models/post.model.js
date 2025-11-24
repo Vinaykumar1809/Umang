@@ -1,38 +1,75 @@
 import mongoose from 'mongoose';
 
-const postSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: String,
-      required: true,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    image: {
-      type: String,
-      default:
-        'https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png',
-    },
-    category: {
-      type: String,
-      default: 'uncategorized',
-    },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+const postSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Title is required'],
+    trim: true,
+    maxlength: 200
   },
-  { timestamps: true }
-);
+  content: {
+    type: String,
+    required: [true, 'Content is required']
+  },
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  featuredImage: {
+    type: String,
+    default: null
+  },
+  featuredImagePublicId: {
+    type: String,
+    default: null
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'pending', 'published', 'rejected'],
+    default: 'draft'
+  },
+  rejectionReason: String,
+  publishedAt: Date,
+  views: {
+    type: Number,
+    default: 0
+  },
+  likes: [{
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  }],
+  comments: [{
+    type: mongoose.Schema.ObjectId,
+    ref: 'Comment'
+  }],
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  editHistory: [{
+    editedAt: Date,
+    editedBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User'
+    },
+    reason: String
+  }],
+  pendingEdit: {
+    title: String,
+    content: String,
+    featuredImage: String,
+    featuredImagePublicId: String,
+    submittedAt: Date,
+    submittedBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User'
+    }
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
 
-const Post = mongoose.model('Post', postSchema);
-
-export default Post;
+export default mongoose.model('Post', postSchema);

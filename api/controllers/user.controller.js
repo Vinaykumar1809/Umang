@@ -6,6 +6,78 @@ export const test = (req, res) => {
   res.json({ message: 'API is working!' });
 };
 
+//Check username availability
+export const checkUsernameAvailability = async (req, res) => {
+  try {
+    const { username } = req.query;
+
+    if (!username || username.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username is required'
+      });
+    }
+
+    // Find if username already exists
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+
+    if (existingUser) {
+      return res.status(200).json({
+        success: false,
+        message: 'Username already taken',
+        available: false
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Username available',
+      available: true
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+//Check email availability
+export const checkEmailAvailability = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email || email.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find if email already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    if (existingUser) {
+      return res.status(200).json({
+        success: false,
+        message: 'Email already registered',
+        available: false
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Email available',
+      available: true
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 export const updateUser = async (req, res, next) => {
   if (req.user.id !== req.params.userId) {
     return next(errorHandler(403, 'You are not allowed to update this user'));
@@ -17,7 +89,7 @@ export const updateUser = async (req, res, next) => {
     req.body.password = bcryptjs.hashSync(req.body.password, 10);
   }
   if (req.body.username) {
-    if (req.body.username.length < 7 || req.body.username.length > 20) {
+    if (req.body.username.length < 6 || req.body.username.length > 20) {
       return next(
         errorHandler(400, 'Username must be between 7 and 20 characters')
       );
