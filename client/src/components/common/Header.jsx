@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/authContext';
 import NotificationDropdown from './NotificationDropdown';
-import { useSocket } from '../../../context/SocketContext';
+import { useSocket } from '../../../context/socketContext';
 import { FaBell, FaUser, FaBars, FaTimes, FaMoon, FaSun } from 'react-icons/fa';
 import axios from 'axios';
 
