@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useSocket } from '../../../context/SocketContext';
+import { useSocket } from '../../../context/socketContext';
 import api from '../../utils/api'
 import { FaFileAlt, FaEdit, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
