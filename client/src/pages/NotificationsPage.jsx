@@ -4,7 +4,7 @@ import moment from 'moment';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { FaBell, FaCheckCircle, FaTrash, FaInbox } from 'react-icons/fa';
-import { useSocket } from '../../context/SocketContext';
+import { useSocket } from '../../context/socketContext';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
