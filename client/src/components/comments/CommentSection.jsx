@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../../context/authContext';
 import Comment from './Comment.jsx';
 import { FaComment } from 'react-icons/fa';
-import { useSocket } from '../../../context/SocketContext';
+import { useSocket } from '../../../context/socketContext';
 
 const CommentSection = ({ postId, postOwnerId }) => {
   const { user, isAuthenticated } = useAuth();
