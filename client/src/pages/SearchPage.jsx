@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import api from '../utils/api';
 import PostCard from '../components/posts/PostCard';
 import toast from 'react-hot-toast';
 import { FaSearch } from 'react-icons/fa';
@@ -18,7 +19,7 @@ const SearchPage = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get('/api/posts/search', {
+      const res = await api.get('/posts/search', {
         params: { q: query }
       });
       setPosts(res.data.data);
