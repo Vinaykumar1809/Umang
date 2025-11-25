@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../utils/api';
 import { useAuth } from '../../context/authContext';
 import AboutSection from '../components/about/AboutSection';
 import TeamSection from '../components/about/TeamSection';
@@ -24,7 +25,7 @@ const AboutPage = () => {
 
       // Fetch About Us data
       try {
-        const aboutRes = await axios.get('/api/aboutus');
+        const aboutRes = await api.get('/aboutus');
         setAboutData(aboutRes.data.data);
       } catch (err) {
         console.warn('About Us data not available');
@@ -33,7 +34,7 @@ const AboutPage = () => {
 
       // Fetch Team Members
       try {
-        const teamRes = await axios.get('/api/team');
+        const teamRes = await api.get('/team');
         setTeamMembers(teamRes.data.data || []);
       } catch (err) {
         console.warn('Team members data not available');
@@ -42,7 +43,7 @@ const AboutPage = () => {
 
       // Fetch Alumni
       try {
-        const alumniRes = await axios.get('/api/alumni');
+        const alumniRes = await api.get('/alumni');
         setGroupedAlumni(alumniRes.data.data || {});
       } catch (err) {
         console.warn('Alumni data not available');
