@@ -182,7 +182,7 @@ const EditPost = () => {
     const deleteImage = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.post('/api/images/delete',
+        await api.post('/api/images/delete',
           { publicId: featuredImagePublicId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
