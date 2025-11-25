@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import AboutSection from '../about/AboutSection';
 import TeamSection from '../about/TeamSection';
 import AlumniSection from '../about/AlumniSection';
@@ -42,7 +43,7 @@ const AboutUsManager = () => {
 
   const fetchAboutUs = async () => {
     try {
-      const res = await axios.get('/api/aboutus');
+      const res = await api.get('/aboutus');
       setAboutData(res.data.data);
     } catch (error) {
       console.error('Error fetching about us:', error);
@@ -51,7 +52,7 @@ const AboutUsManager = () => {
 
   const fetchTeamMembers = async () => {
     try {
-      const res = await axios.get('/api/team');
+      const res = await api.get('/team');
       setTeamMembers(res.data.data || []);
     } catch (error) {
       console.error('Error fetching team members:', error);
@@ -60,7 +61,7 @@ const AboutUsManager = () => {
 
   const fetchAlumni = async () => {
     try {
-      const res = await axios.get('/api/alumni');
+      const res = await api.get('/alumni');
       setGroupedAlumni(res.data.data || {});
     } catch (error) {
       console.error('Error fetching alumni:', error);
