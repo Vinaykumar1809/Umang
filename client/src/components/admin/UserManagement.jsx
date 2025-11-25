@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { FaTrash, FaUserEdit, FaSearch } from 'react-icons/fa';
 import moment from 'moment';
-
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -15,32 +15,33 @@ const UserManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newRole, setNewRole] = useState('');
-  const [suspensionPeriod, setSuspensionPeriod] = useState('24HOURS'); 
-
+  const [suspensionPeriod, setSuspensionPeriod] = useState('24HOURS');
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/users');
-      setUsers(res.data.data);
-      setLoading(false);
+      const res = await api.get('/users');
+      
+      // Ensure we always set an array, even if data structure is unexpected
+      setUsers(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (error) {
       toast.error('Failed to fetch users');
+      console.error(error);
+      
+      // IMPORTANT: Set users to empty array on error
+      setUsers([]);
+    } finally {
       setLoading(false);
     }
   };
 
-
   const handleRoleChange = async () => {
     try {
-      await axios.put(`/api/users/${selectedUser._id}/role`, {
-        role: newRole
-      });
+      await api.put(`/users/${selectedUser._id}/role`, { role: newRole });
       toast.success('User role updated successfully');
       setUsers(users.map(u => 
         u._id === selectedUser._id ? { ...u, role: newRole } : u
@@ -55,16 +56,13 @@ const UserManagement = () => {
   const handleStatusChange = async () => {
     try {
       const newStatus = !selectedUser.isActive;
-
-      await axios.put(`/api/users/${selectedUser._id}/status`, {
+      await api.put(`/users/${selectedUser._id}/status`, {
         isActive: newStatus,
         suspensionPeriod: newStatus ? null : suspensionPeriod,
       });
 
       toast.success(
-        newStatus
-          ? 'User activated successfully'
-          : 'User deactivated successfully'
+        newStatus ? 'User activated successfully' : 'User deactivated successfully'
       );
 
       setUsers(
@@ -91,7 +89,6 @@ const UserManagement = () => {
     }
   };
 
-
   const calculateExpirationDate = (period) => {
     const now = new Date();
     switch (period) {
@@ -108,17 +105,15 @@ const UserManagement = () => {
     }
   };
 
-
   const openStatusModal = (user) => {
     setSelectedUser(user);
     setSuspensionPeriod('24HOURS');
     setShowStatusModal(true);
   };
 
-
   const handleDelete = async () => {
     try {
-      await axios.delete(`/api/users/${selectedUser._id}`);
+      await api.delete(`/users/${selectedUser._id}`);
       toast.success('User deleted successfully');
       setUsers(users.filter(u => u._id !== selectedUser._id));
       setShowDeleteModal(false);
@@ -128,36 +123,34 @@ const UserManagement = () => {
     }
   };
 
-
   const openEditModal = (user) => {
     setSelectedUser(user);
     setNewRole(user.role);
     setShowEditModal(true);
   };
 
-
   const openDeleteModal = (user) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
 
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  // FIXED: Added defensive check for users array
+  const filteredUsers = Array.isArray(users)
+    ? users.filter(user => {
+        const matchesSearch =
+          user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = filterRole === 'all' || user.role === filterRole;
+        return matchesSearch && matchesRole;
+      })
+    : [];
 
   const optimizeImage = (url) => {
-  if (!url) return url;
-
-  // If already optimized, return as-is
-  if (url.includes("f_auto") || url.includes("q_auto")) return url;
-
-  return url.replace("/upload/", "/upload/f_auto,q_auto/");
-};
-
+    if (!url) return url;
+    // If already optimized, return as-is
+    if (url.includes("f_auto") || url.includes("q_auto")) return url;
+    return url.replace("/upload/", "/upload/f_auto,q_auto/");
+  };
 
   if (loading) {
     return (
@@ -167,17 +160,15 @@ const UserManagement = () => {
     );
   }
 
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
           User Management
         </h1>
 
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* Search and Filter */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -185,32 +176,28 @@ const UserManagement = () => {
               placeholder="Search by username or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All Roles</option>
-            <option value="USER">Users</option>
-            <option value="MEMBER">Members</option>
-            <option value="ADMIN">Admins</option>
+            <option value="admin">Admin</option>
+            <option value="member">Member</option>
+            <option value="user">User</option>
           </select>
         </div>
 
-
         {/* Users Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Role
@@ -227,125 +214,109 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={optimizeImage(user.profileImage) || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}
-                        alt={user.username}
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {user.username}
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          src={optimizeImage(user.profilePicture) || '/default-avatar.png'}
+                          alt={user.username}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user.username}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {user.email}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {user.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role === 'ADMIN' 
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                        : user.role === 'MEMBER'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {moment(user.createdAt).format('MMM DD, YYYY')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-  
-  <button
-    onClick={() => openStatusModal(user)}
-    disabled={user.role === 'ADMIN'}
-    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full transition-opacity ${
-      user.role === 'ADMIN' 
-        ? 'opacity-50 cursor-not-allowed' 
-        : 'hover:opacity-80'
-    }`}
-    style={{
-      backgroundColor: user.isActive ? '#d1fae5' : '#fee2e2',
-      color: user.isActive ? '#065f46' : '#991b1b',
-    }}
-    title={user.role === 'ADMIN' ? 'Cannot change admin status' : 'Click to change status'}
-  >
-    {user.isActive ? 'Active' : 'Inactive'}
-    {user.inactivationExpire && (
-      <div style={{ fontSize: '9px', marginTop: '2px' }}>
-        Until {moment(user.inactivationExpire).format('MMM DD')}
-      </div>
-    )}
-  </button>
-</td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.role === 'admin'
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                            : user.role === 'member'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {moment(user.createdAt).format('MMM DD, YYYY')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => openStatusModal(user)}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                          user.isActive
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}
+                      >
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => openEditModal(user)}
-                        disabled={user.role === 'ADMIN'}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={user.role === 'ADMIN' ? 'Cannot modify admin role' : 'Change role'}
+                        className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-4"
                       >
-                        <FaUserEdit size={18} />
+                        <FaUserEdit className="inline" /> Edit
                       </button>
                       <button
                         onClick={() => openDeleteModal(user)}
-                        disabled={user.role === 'ADMIN'}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={user.role === 'ADMIN' ? 'Cannot delete admin' : 'Delete user'}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                       >
-                        <FaTrash size={18} />
+                        <FaTrash className="inline" /> Delete
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">No users found</p>
-          </div>
-        )}
       </div>
 
-
-      {/* Edit Role Modal*/}
-      {showEditModal && (
+      {/* Edit Role Modal */}
+      {showEditModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Change User Role
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              Change role for{' '}
+              <span className="text-primary-600">{selectedUser?.username}</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Change role for <strong>{selectedUser?.username}</strong>
-            </p>
             <select
               value={newRole}
               onChange={(e) => setNewRole(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white mb-4"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              <option value="USER">User</option>
-              <option value="MEMBER">Member</option>
+              <option value="user">User</option>
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
             </select>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Note: Admin roles cannot be assigned through this interface
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowEditModal(false);
                   setSelectedUser(null);
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Cancel
               </button>
@@ -360,24 +331,27 @@ const UserManagement = () => {
         </div>
       )}
 
-
-      {/* Delete Confirmation Modal*/}
-      {showDeleteModal && (
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Delete User
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              Confirm Deletion
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete <strong>{selectedUser?.username}</strong>? This action cannot be undone.
+            <p className="mb-4 text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete{' '}
+              <span className="font-semibold text-primary-600">
+                {selectedUser?.username}
+              </span>
+              ? This action cannot be undone.
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowDeleteModal(false);
                   setSelectedUser(null);
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Cancel
               </button>
@@ -392,71 +366,78 @@ const UserManagement = () => {
         </div>
       )}
 
-      {/* Status Modal - Similar to Role Modal */}
-      {showStatusModal && (
+      {/* Status Change Modal */}
+      {showStatusModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              {selectedUser?.isActive ? 'Deactivate User' : 'Activate User'}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              {selectedUser.isActive ? 'Deactivate' : 'Activate'} User
             </h2>
-
-            {selectedUser?.isActive ? (
+            {selectedUser.isActive ? (
               <>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Are you sure you want to deactivate <strong>{selectedUser?.username}</strong>'s account?
+                <p className="mb-4 text-gray-700 dark:text-gray-300">
+                  Are you sure you want to deactivate{' '}
+                  <span className="font-semibold text-primary-600">
+                    {selectedUser?.username}
+                  </span>
+                  's account?
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
                   They will receive an email notification about the suspension.
                 </p>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Suspension Duration:
-                  </label>
-                  <select
-                    value={suspensionPeriod}
-                    onChange={(e) => setSuspensionPeriod(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="24HOURS">24 Hours</option>
-                    <option value="7DAYS">7 Days</option>
-                    <option value="30DAYS">30 Days</option>
-                    <option value="INDEFINITE">Indefinitely</option>
-                  </select>
-                </div>
-
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Suspension Period
+                </label>
+                <select
+                  value={suspensionPeriod}
+                  onChange={(e) => setSuspensionPeriod(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="24HOURS">24 Hours</option>
+                  <option value="7DAYS">7 Days</option>
+                  <option value="30DAYS">30 Days</option>
+                  <option value="INDEFINITE">Indefinite</option>
+                </select>
                 {suspensionPeriod !== 'INDEFINITE' && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-2 rounded mb-4">
-                    Account will be automatically reactivated on <strong>{moment(calculateExpirationDate(suspensionPeriod)).format('MMM DD, YYYY hh:mm A')}</strong>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Account will be automatically reactivated on{' '}
+                    <span className="font-semibold">
+                      {moment(calculateExpirationDate(suspensionPeriod)).format(
+                        'MMM DD, YYYY hh:mm A'
+                      )}
+                    </span>
                   </p>
                 )}
               </>
             ) : (
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Are you sure you want to activate <strong>{selectedUser?.username}</strong>'s account?
+              <p className="mb-4 text-gray-700 dark:text-gray-300">
+                Are you sure you want to activate{' '}
+                <span className="font-semibold text-primary-600">
+                  {selectedUser?.username}
+                </span>
+                's account?
               </p>
             )}
-
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowStatusModal(false);
-                  setSuspensionPeriod('24HOURS');
                   setSelectedUser(null);
+                  setSuspensionPeriod('24HOURS');
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStatusChange}
                 className={`px-4 py-2 text-white rounded-lg ${
-                  selectedUser?.isActive
+                  selectedUser.isActive
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-green-600 hover:bg-green-700'
                 }`}
               >
-                {selectedUser?.isActive ? 'Deactivate' : 'Activate'}
+                {selectedUser.isActive ? 'Deactivate' : 'Activate'}
               </button>
             </div>
           </div>
@@ -465,6 +446,5 @@ const UserManagement = () => {
     </div>
   );
 };
-
 
 export default UserManagement;
