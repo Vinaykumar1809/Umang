@@ -34,7 +34,7 @@ export const register = async (req, res) => {
 
     // Send welcome email
     try {
-      console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+      console.log("FRONTEND_URL:", process.env.CLIENT_URL);
 
       const message =`
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
