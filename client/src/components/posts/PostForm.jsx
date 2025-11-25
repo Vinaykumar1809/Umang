@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import PostCard from './PostCard';
 
 const PostList = ({ query = '' }) => {
@@ -9,7 +10,7 @@ const PostList = ({ query = '' }) => {
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
-      const res = await axios.get(`/api/posts?search=${query}`);
+      const res = await api.get(`/posts?search=${query}`);
       setPosts(res.data.data);
       setLoading(false);
     };
