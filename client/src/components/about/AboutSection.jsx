@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { FaEdit, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../../../context/authContext';
@@ -46,7 +47,7 @@ const AboutSection = ({ aboutData, onUpdate }) => {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
 
-      const response = await axios.post('/api/images/upload', formDataToSend, {
+      const response = await api.post('/images/upload', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
@@ -56,7 +57,7 @@ const AboutSection = ({ aboutData, onUpdate }) => {
       if (response.data.success) {
         if (formData.imagePublicId) {
           try {
-            await axios.post('/api/images/delete',
+            await api.post('/images/delete',
               { publicId: formData.imagePublicId },
               { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -90,7 +91,7 @@ const AboutSection = ({ aboutData, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/images/delete',
+      await api.post('/images/delete',
         { publicId: formData.imagePublicId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -114,7 +115,7 @@ const AboutSection = ({ aboutData, onUpdate }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.put('/api/aboutus', formData, {
+      await api.put('/aboutus', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('About Us updated successfully');
