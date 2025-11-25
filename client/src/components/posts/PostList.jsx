@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import PostCard from './PostCard';
 import toast from 'react-hot-toast';
 import { FaSearch } from 'react-icons/fa';
 
 const PostList = ({ initialSearch = '' }) => {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState([]); // always start as array
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -15,31 +16,42 @@ const PostList = ({ initialSearch = '' }) => {
   const fetchPosts = useCallback(async (pageNumber, searchTerm) => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/posts', {
-        params: { limit: 10, page: pageNumber, search: searchTerm,sort: '-createdAt' }
+      const res = await api.get('/posts', {
+        params: { limit: 10, page: pageNumber, search: searchTerm, sort: '-createdAt' }
       });
+
+      // Ensure posts array is always valid
+      const newPosts = Array.isArray(res.data?.data) ? res.data.data : [];
+
       if (pageNumber === 1) {
-        setPosts(res.data.data);
+        setPosts(newPosts);
       } else {
-        setPosts(prev => [...prev, ...res.data.data]);
+        setPosts(prev => [...prev, ...newPosts]);
       }
-      setHasMore(pageNumber < res.data.pagination.pages);
+
+      // Safely handle pagination
+      const totalPages = res.data?.pagination?.pages || 0;
+      setHasMore(pageNumber < totalPages);
     } catch (error) {
       toast.error('Failed to fetch posts');
+      setHasMore(false); // stop trying if API fails
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  // Debounce search input to avoid firing on every keystroke
+  // Debounce search input
   useEffect(() => {
     if (debounceTimer) clearTimeout(debounceTimer);
+
     const timer = setTimeout(() => {
       setPage(1);
       fetchPosts(1, search);
     }, 500); // 500ms debounce
+
     setDebounceTimer(timer);
 
-    return () => clearTimeout(timer); // cleanup on unmount or search change
+    return () => clearTimeout(timer);
   }, [search, fetchPosts]);
 
   const loadMore = () => {
@@ -51,7 +63,7 @@ const PostList = ({ initialSearch = '' }) => {
 
   return (
     <>
-      {/* Search input with icon */}
+      {/* Search input */}
       <div className="mb-4 flex justify-center">
         <div className="relative w-full max-w-md">
           <input
@@ -73,7 +85,7 @@ const PostList = ({ initialSearch = '' }) => {
 
       {/* Posts grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map(post => <PostCard key={post._id} post={post} />)}
+        {(posts || []).map(post => <PostCard key={post._id} post={post} />)}
       </div>
 
       {/* Loading state */}
@@ -82,7 +94,7 @@ const PostList = ({ initialSearch = '' }) => {
       )}
 
       {/* Load More Button */}
-      {!loading && hasMore && (
+      {!loading && hasMore && posts.length > 0 && (
         <div className="mt-6 text-center">
           <button
             onClick={loadMore}
@@ -94,12 +106,12 @@ const PostList = ({ initialSearch = '' }) => {
       )}
 
       {/* No more posts */}
-      {!hasMore && posts.length > 0 && (
+      {!loading && !hasMore && posts.length > 0 && (
         <div className="mt-6 text-center text-gray-500">No more posts</div>
       )}
 
       {/* No posts found */}
-      {posts.length === 0 && !loading && (
+      {!loading && posts.length === 0 && (
         <div className="mt-6 text-center text-gray-500">No posts found</div>
       )}
     </>
