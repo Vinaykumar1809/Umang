@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../../utils/api';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaTrash, FaLinkedin, FaGithub, FaInstagram, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
@@ -67,7 +68,7 @@ const AlumniSection = ({ groupedAlumni: initialGroupedAlumni, onUpdate }) => {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
 
-      const response = await axios.post('/api/images/upload', formDataToSend, {
+      const response = await api.post('/images/upload', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
@@ -77,7 +78,7 @@ const AlumniSection = ({ groupedAlumni: initialGroupedAlumni, onUpdate }) => {
       if (response.data.success) {
         if (editingAlumnus && formData.photoPublicId) {
           try {
-            await axios.post('/api/images/delete',
+            await api.post('/images/delete',
               { publicId: formData.photoPublicId },
               {
                 headers: {
@@ -115,7 +116,7 @@ const AlumniSection = ({ groupedAlumni: initialGroupedAlumni, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/images/delete',
+      await api.post('/images/delete',
         { publicId: formData.photoPublicId },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -162,10 +163,10 @@ const AlumniSection = ({ groupedAlumni: initialGroupedAlumni, onUpdate }) => {
       };
 
       if (editingAlumnus) {
-        await axios.put(`/api/alumni/${editingAlumnus._id}`, formData, config);
+        await api.put(`/alumni/${editingAlumnus._id}`, formData, config);
         toast.success('Alumni updated successfully');
       } else {
-        await axios.post('/api/alumni', formData, config);
+        await api.post('/alumni', formData, config);
         toast.success('Alumni added successfully');
       }
 
@@ -188,7 +189,7 @@ const AlumniSection = ({ groupedAlumni: initialGroupedAlumni, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/alumni/${id}`, {
+      await api.delete(`/alumni/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
