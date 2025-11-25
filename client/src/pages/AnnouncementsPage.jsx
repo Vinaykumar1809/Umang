@@ -16,25 +16,27 @@ const AnnouncementsPage = () => {
     fetchAnnouncements();
   }, []);
 
-  const fetchAnnouncements = async () => {
-    try {
-      setLoading(true);
-      // Use public endpoint - no authentication required
-      const res = await axios.get('/api/announcements');
-      setAnnouncements(res.data.data);
-      setLoading(false);
-    } catch (error) {
-      toast.error('Failed to fetch announcements');
-      console.error('Fetch error:', error);
-      setLoading(false);
-    }
-  };
+const fetchAnnouncements = async () => {
+  try {
+    setLoading(true);
+    const res = await api.get('/announcements');
 
-  const filteredAnnouncements = announcements.filter((announcement) => {
-    if (filter === 'all') return true;
-    if (filter === 'featured') return announcement.isFeatured;
-    return true;
-  });
+    setAnnouncements(Array.isArray(res.data?.data) ? res.data.data : []);
+  } catch (error) {
+    toast.error("Failed to fetch announcements");
+    console.error(error);
+
+    setAnnouncements([]); // important
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const filteredAnnouncements = Array.isArray(announcements)
+  ? announcements.filter((a) => filter === "featured" ? a.isFeatured : true)
+  : [];
+
 
   const handleDelete = (deletedId) => {
     setAnnouncements((prev) => prev.filter((a) => a._id !== deletedId));
