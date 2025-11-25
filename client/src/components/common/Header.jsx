@@ -5,6 +5,7 @@ import NotificationDropdown from './NotificationDropdown';
 import { useSocket } from '../../../context/socketContext';
 import { FaBell, FaUser, FaBars, FaTimes, FaMoon, FaSun } from 'react-icons/fa';
 import axios from 'axios';
+import api from '../../utils/api';
 
 
 import UmangLogoLight from '../../assets/umang-logo-light.png';
@@ -55,7 +56,7 @@ const Header = () => {
   const fetchUnreadCount = async () => {
     try {
       // Using axios and relative path — your dev proxy should forward this to the API
-      const res = await axios.get('/api/notifications/unread/count');
+      const res = await api.get('/notifications/unread/count');
       setUnreadCount(res.data.count ?? 0);
     } catch (error) {
       console.error('Failed to fetch unread count', error);
