@@ -128,7 +128,7 @@ const EditPost = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
 
-      const response = await axios.post('/api/images/upload', formDataToSend, {
+      const response = await api.post('/images/upload', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
