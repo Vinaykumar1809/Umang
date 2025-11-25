@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaTrash, FaLinkedin, FaGithub,FaInstagram, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../../../context/authContext';
@@ -83,7 +84,7 @@ const TeamSection = ({ teamMembers: initialTeamMembers, onUpdate }) => {
 
 
 
-      const response = await axios.post('/api/images/upload', formDataToSend, {
+      const response = await api.post('/images/upload', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
@@ -95,7 +96,7 @@ const TeamSection = ({ teamMembers: initialTeamMembers, onUpdate }) => {
       if (response.data.success) {
         if (editingMember && formData.photoPublicId) {
           try {
-            await axios.post('/api/images/delete',
+            await api.post('/images/delete',
               { publicId: formData.photoPublicId },
               {
                 headers: {
@@ -141,7 +142,7 @@ const TeamSection = ({ teamMembers: initialTeamMembers, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/images/delete',
+      await api.post('/images/delete',
         { publicId: formData.photoPublicId },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -200,10 +201,10 @@ const TeamSection = ({ teamMembers: initialTeamMembers, onUpdate }) => {
 
 
       if (editingMember) {
-        await axios.put(`/api/team/${editingMember._id}`, formData, config);
+        await api.put(`/team/${editingMember._id}`, formData, config);
         toast.success('Team member updated successfully');
       } else {
-        await axios.post('/api/team', formData, config);
+        await api.post('/team', formData, config);
         toast.success('Team member added successfully');
       }
 
@@ -234,7 +235,7 @@ const TeamSection = ({ teamMembers: initialTeamMembers, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/team/${id}`, {
+      await api.delete(`/team/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
