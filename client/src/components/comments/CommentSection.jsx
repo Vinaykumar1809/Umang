@@ -48,7 +48,7 @@ const CommentSection = ({ postId, postOwnerId }) => {
       setSubmitting(true);
       
   
-      const res = await axios.post('/api/comments', {
+      const res = await api.post('/comments', {
         content: newComment,
         postId: postId
       });
