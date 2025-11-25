@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 import AnnouncementCard from './AnnouncementCard';
 import toast from 'react-hot-toast';
 
@@ -12,7 +13,7 @@ const AnnouncementList = () => {
   const fetchAnnouncements = async (pageNum) => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/announcements', { params: { limit: 10, page: pageNum } });
+      const res = await api.get('/announcements', { params: { limit: 10, page: pageNum } });
       if (pageNum === 1) {
         setAnnouncements(res.data.data);
       } else {
