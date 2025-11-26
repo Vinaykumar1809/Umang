@@ -73,7 +73,7 @@ const startServer = async () => {
 
   // ------- Rate Limiting (skip OPTIONS requests) -------
   const limiter = rateLimit({
-    windowMs: 10 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     max: 100,
     skip: (req) => req.method === "OPTIONS",
   });
